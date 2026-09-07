@@ -1,69 +1,116 @@
-import Image from "next/image";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import type { Categoria, Producto } from "@/types";
+import ProductCard from "@/components/ProductCard";
 
-export default function Home() {
+export const revalidate = 0;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; categoria?: string }>;
+}) {
+  const { q, categoria } = await searchParams;
+
+  const { data: categorias } = await supabase
+    .from("categorias")
+    .select("id, nombre, imagen_generica_url, orden")
+    .order("orden");
+
+  let query = supabase
+    .from("productos")
+    .select(
+      "id, codigo, detalle, descripcion, familia, categoria_id, marca, precio_venta, stock, foto_url, activo, categorias(nombre)"
+    )
+    .eq("activo", true)
+    .order("detalle");
+
+  if (q) {
+    query = query.or(
+      `detalle.ilike.%${q}%,codigo.ilike.%${q}%,marca.ilike.%${q}%`
+    );
+  }
+  if (categoria) {
+    query = query.eq("categoria_id", categoria);
+  }
+
+  const { data: productos, error } = await query;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 sm:p-8">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold">Norte Motorepuestos</h1>
+        <p className="text-sm text-black/60 dark:text-white/60">
+          Catálogo de repuestos para motos — consultá stock y precios
+        </p>
+      </header>
+
+      <form className="flex flex-col gap-3 sm:flex-row" method="get">
+        <input
+          type="text"
+          name="q"
+          defaultValue={q}
+          placeholder="Buscar por nombre, código o marca..."
+          className="flex-1 rounded-lg border border-black/15 bg-white px-4 py-2 text-sm outline-none focus:border-black/40 dark:border-white/15 dark:bg-white/5 dark:focus:border-white/40"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+        {categoria && <input type="hidden" name="categoria" value={categoria} />}
+        <button
+          type="submit"
+          className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-black"
+        >
+          Buscar
+        </button>
+      </form>
+
+      <nav className="flex flex-wrap gap-2">
+        <Link
+          href={q ? `/?q=${encodeURIComponent(q)}` : "/"}
+          className={`rounded-full border px-3 py-1 text-sm transition ${
+            !categoria
+              ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+              : "border-black/15 hover:border-black/40 dark:border-white/15 dark:hover:border-white/40"
+          }`}
+        >
+          Todas
+        </Link>
+        {categorias?.map((cat: Categoria) => {
+          const params = new URLSearchParams();
+          if (q) params.set("q", q);
+          params.set("categoria", cat.id);
+          const isActive = categoria === cat.id;
+          return (
+            <Link
+              key={cat.id}
+              href={`/?${params.toString()}`}
+              className={`rounded-full border px-3 py-1 text-sm transition ${
+                isActive
+                  ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+                  : "border-black/15 hover:border-black/40 dark:border-white/15 dark:hover:border-white/40"
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              {cat.nombre}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {error && (
+        <p className="text-sm text-red-600">
+          Ocurrió un error al cargar los productos: {error.message}
+        </p>
+      )}
+
+      {!error && productos && productos.length === 0 && (
+        <p className="text-sm text-black/60 dark:text-white/60">
+          No se encontraron productos con esos criterios.
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {productos?.map((producto) => (
+          <ProductCard key={producto.id} producto={producto as unknown as Producto} />
+        ))}
+      </div>
     </div>
   );
 }
