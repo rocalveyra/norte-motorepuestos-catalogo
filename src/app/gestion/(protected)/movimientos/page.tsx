@@ -56,6 +56,20 @@ export default function MovimientosPage() {
   const stockInsuficiente =
     tipo === "venta" && producto !== null && cantidadNum > 0 && cantidadNum > producto.stock;
 
+  const precioListo =
+    precioTipo === ""
+      ? true
+      : precioTipo === "otro"
+        ? precioUnitario !== null && precioUnitario > 0
+        : precioUnitario !== null && precioUnitario > 0;
+
+  const puedeConfirmar =
+    producto !== null &&
+    cantidadNum > 0 &&
+    (tipo !== "ajuste" || motivo.trim().length > 0) &&
+    (tipo !== "venta" || (precioTipo !== "" && precioListo)) &&
+    precioListo;
+
   function resetParcial() {
     setProducto(null);
     setCantidad("");
@@ -309,6 +323,43 @@ export default function MovimientosPage() {
           </div>
         )}
 
+        {producto && (
+          <div className="rounded-lg border border-[#2a2216] bg-[#151109] p-4 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#a89a89]">
+              Vas a cargar
+            </p>
+            <p className="mt-1 text-[#efe9df]">
+              <span className="font-bold capitalize text-[#f2891f]">{tipo}</span>
+              {tipo === "ajuste" && (ajusteSigno === "-" ? " (restar)" : " (sumar)")} de{" "}
+              <span className="font-semibold">
+                {cantidadNum || "—"} {producto.unidad_medida}
+              </span>{" "}
+              de <span className="font-semibold">{producto.detalle}</span>
+              {precioTipo && precioUnitario !== null && (
+                <>
+                  {" "}
+                  a{" "}
+                  <span className="font-semibold text-[#f7c948]">
+                    ${precioUnitario.toLocaleString("es-AR")}
+                  </span>{" "}
+                  ({PRECIO_LABELS[precioTipo]})
+                </>
+              )}
+              {tipo === "venta" && cliente && (
+                <>
+                  {" "}
+                  · Cliente: <span className="font-semibold">{cliente.nombre}</span>
+                </>
+              )}
+            </p>
+            {tipo === "venta" && precioUnitario !== null && cantidadNum > 0 && (
+              <p className="mt-1 text-base font-bold text-[#efe9df]">
+                Total: ${(precioUnitario * cantidadNum).toLocaleString("es-AR")}
+              </p>
+            )}
+          </div>
+        )}
+
         {mensaje && (
           <p
             className={`rounded-lg border px-4 py-2 text-sm font-semibold ${
@@ -321,13 +372,28 @@ export default function MovimientosPage() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={enviando}
-          className="self-start rounded-lg bg-[#f2891f] px-6 py-2.5 text-sm font-bold text-[#0a0a0a] transition hover:brightness-110 disabled:opacity-60"
-        >
-          {enviando ? "Guardando..." : "Confirmar movimiento"}
-        </button>
+        <div className="flex flex-col items-start gap-1.5">
+          <button
+            type="submit"
+            disabled={enviando || !puedeConfirmar}
+            className="self-start rounded-lg bg-[#f2891f] px-6 py-2.5 text-sm font-bold text-[#0a0a0a] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {enviando ? "Guardando..." : "Confirmar movimiento"}
+          </button>
+          {!puedeConfirmar && !enviando && (
+            <p className="text-xs text-[#a89a89]">
+              {!producto
+                ? "Elegí un producto para continuar."
+                : !cantidadNum || cantidadNum <= 0
+                  ? "Ingresá una cantidad mayor a 0."
+                  : tipo === "ajuste" && !motivo.trim()
+                    ? "Escribí el motivo del ajuste."
+                    : tipo === "venta" && !precioTipo
+                      ? "Elegí un precio para la venta."
+                      : "Completá los campos obligatorios para confirmar."}
+            </p>
+          )}
+        </div>
       </form>
     </div>
   );
