@@ -79,8 +79,8 @@ export default function GestionShell({
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
-          {NAV_ITEMS.map((item) => (
-            <NavLink key={item.href} {...item} pathname={pathname} />
+          {NAV_ITEMS.filter((item) => !item.adminOnly || rol === "admin").map((item) => (
+            <NavLink key={item.href} href={item.href} label={item.label} pathname={pathname} />
           ))}
         </nav>
       </aside>
@@ -158,10 +158,11 @@ export default function GestionShell({
                 </button>
               </div>
               <nav className="flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => (
+                {NAV_ITEMS.filter((item) => !item.adminOnly || rol === "admin").map((item) => (
                   <NavLink
                     key={item.href}
-                    {...item}
+                    href={item.href}
+                    label={item.label}
                     pathname={pathname}
                     onClick={() => setMenuOpen(false)}
                   />

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import MovimientosClient from "@/components/gestion/movimientos/MovimientosClient";
+import CuentasClient from "@/components/gestion/cuentas/CuentasClient";
 
-export default async function MovimientosPage() {
+export default async function CuentasPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -18,5 +18,9 @@ export default async function MovimientosPage() {
     .eq("id", user.id)
     .single();
 
-  return <MovimientosClient rol={perfil?.rol ?? "empleado"} />;
+  if (perfil?.rol !== "admin") {
+    redirect("/gestion");
+  }
+
+  return <CuentasClient />;
 }
