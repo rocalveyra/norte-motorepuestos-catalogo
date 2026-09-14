@@ -22,6 +22,8 @@ export default function ClienteBuscador({
   const [creando, setCreando] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevoTelefono, setNuevoTelefono] = useState("");
+  const [nuevoDni, setNuevoDni] = useState("");
+  const [nuevaDireccion, setNuevaDireccion] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
@@ -52,7 +54,12 @@ export default function ClienteBuscador({
     const supabase = createClient();
     const { data, error } = await supabase
       .from("clientes")
-      .insert({ nombre: nuevoNombre.trim(), telefono: nuevoTelefono.trim() || null })
+      .insert({
+        nombre: nuevoNombre.trim(),
+        telefono: nuevoTelefono.trim() || null,
+        dni: nuevoDni.trim() || null,
+        direccion: nuevaDireccion.trim() || null,
+      })
       .select("id, nombre, telefono")
       .single();
     setGuardando(false);
@@ -64,6 +71,8 @@ export default function ClienteBuscador({
     setCreando(false);
     setNuevoNombre("");
     setNuevoTelefono("");
+    setNuevoDni("");
+    setNuevaDireccion("");
   }
 
   if (cliente) {
@@ -105,6 +114,20 @@ export default function ClienteBuscador({
           placeholder="Teléfono (opcional)"
           value={nuevoTelefono}
           onChange={(e) => setNuevoTelefono(e.target.value)}
+          className="rounded-lg border border-[#2a2216] bg-[#0a0a0a] px-3 py-1.5 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
+        />
+        <input
+          type="text"
+          placeholder="DNI (opcional)"
+          value={nuevoDni}
+          onChange={(e) => setNuevoDni(e.target.value)}
+          className="rounded-lg border border-[#2a2216] bg-[#0a0a0a] px-3 py-1.5 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
+        />
+        <input
+          type="text"
+          placeholder="Dirección (opcional)"
+          value={nuevaDireccion}
+          onChange={(e) => setNuevaDireccion(e.target.value)}
           className="rounded-lg border border-[#2a2216] bg-[#0a0a0a] px-3 py-1.5 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
         />
         {errorCrear && <p className="text-xs font-semibold text-[#d62828]">{errorCrear}</p>}
