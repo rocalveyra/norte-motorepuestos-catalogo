@@ -12,10 +12,12 @@ export interface MovimientoHistorial {
   precio_tipo: string | null;
   precio_unitario: number | null;
   cliente_id: string | null;
+  proveedor_id: string | null;
   motivo: string | null;
   fecha: string;
   productos: { codigo: string; detalle: string } | null;
   clientes: { nombre: string } | null;
+  proveedores: { nombre: string } | null;
   perfiles: { nombre: string } | null;
 }
 
@@ -91,7 +93,7 @@ export default function HistorialMovimientos({
       let query = supabase
         .from("movimientos_stock")
         .select(
-          "id, producto_id, tipo, cantidad, unidad_medida, precio_tipo, precio_unitario, cliente_id, motivo, fecha, productos(codigo, detalle), clientes(nombre), perfiles(nombre)"
+          "id, producto_id, tipo, cantidad, unidad_medida, precio_tipo, precio_unitario, cliente_id, proveedor_id, motivo, fecha, productos(codigo, detalle), clientes(nombre), proveedores(nombre), perfiles(nombre)"
         )
         .order("fecha", { ascending: false })
         .limit(200);
@@ -390,6 +392,12 @@ export default function HistorialMovimientos({
                 <div>
                   <dt className="text-xs text-[#a89a89]">Cliente</dt>
                   <dd>{detalle.clientes.nombre}</dd>
+                </div>
+              )}
+              {detalle.proveedores && (
+                <div>
+                  <dt className="text-xs text-[#a89a89]">Proveedor</dt>
+                  <dd>{detalle.proveedores.nombre}</dd>
                 </div>
               )}
               {detalle.motivo && (

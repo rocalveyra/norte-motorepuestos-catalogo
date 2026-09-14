@@ -9,6 +9,7 @@ import ProductoBuscador, {
 import ClienteBuscador, {
   type ClienteResultado,
 } from "@/components/gestion/movimientos/ClienteBuscador";
+import ProveedorSelectorCompra from "@/components/gestion/movimientos/ProveedorSelectorCompra";
 import PagosSelector, {
   nuevaFilaPago,
   pagosCompletos,
@@ -45,6 +46,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
   const [precioTipo, setPrecioTipo] = useState<PrecioTipo>("");
   const [precioOtro, setPrecioOtro] = useState("");
   const [cliente, setCliente] = useState<ClienteResultado | null>(null);
+  const [proveedorId, setProveedorId] = useState("");
   const [pagos, setPagos] = useState<PagoRow[]>([nuevaFilaPago()]);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: "success" | "error"; texto: string } | null>(
@@ -90,6 +92,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
     (tipo !== "ajuste" || motivo.trim().length > 0) &&
     (!precioObligatorio || (precioTipo !== "" && precioListo)) &&
     (tipo !== "venta" || cliente !== null) &&
+    (tipo !== "compra" || proveedorId !== "") &&
     (!pagosObligatorios || pagosOk);
 
   function resetFormulario() {
@@ -99,6 +102,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
     setPrecioTipo("");
     setPrecioOtro("");
     setCliente(null);
+    setProveedorId("");
     setAjusteSigno("+");
     setPagos([nuevaFilaPago()]);
     setEditandoId(null);
@@ -137,6 +141,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
     } else {
       setCliente(null);
     }
+    setProveedorId(row.proveedor_id ?? "");
     setEditandoId(row.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -168,6 +173,10 @@ export default function MovimientosClient({ rol }: { rol: string }) {
       setMensaje({ tipo: "error", texto: "El cliente es obligatorio para una venta." });
       return;
     }
+    if (tipo === "compra" && !proveedorId) {
+      setMensaje({ tipo: "error", texto: "El proveedor es obligatorio para una compra." });
+      return;
+    }
     if (pagosObligatorios && !pagosOk) {
       setMensaje({
         tipo: "error",
@@ -193,6 +202,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
           precio_tipo: precioTipo || null,
           precio_unitario: precioTipo ? precioUnitario : null,
           cliente_id: tipo === "venta" ? (cliente?.id ?? null) : null,
+          proveedor_id: tipo === "compra" ? proveedorId || null : null,
           motivo: tipo === "ajuste" ? motivo.trim() : null,
         })
         .eq("id", editandoId);
@@ -216,6 +226,7 @@ export default function MovimientosClient({ rol }: { rol: string }) {
       p_precio_tipo: precioTipo || null,
       p_precio_unitario: precioTipo ? precioUnitario : null,
       p_cliente_id: tipo === "venta" ? (cliente?.id ?? null) : null,
+      p_proveedor_id: tipo === "compra" ? proveedorId || null : null,
       p_motivo: tipo === "ajuste" ? motivo.trim() : null,
       p_pagos: pagosObligatorios
         ? pagos.map((p) => ({
@@ -421,6 +432,14 @@ export default function MovimientosClient({ rol }: { rol: string }) {
           </div>
         )}
 
+        {tipo === "compra" && producto && (
+          <ProveedorSelectorCompra
+            productoId={producto.id}
+            value={proveedorId}
+            onChange={setProveedorId}
+          />
+        )}
+
         {pagosObligatorios && (
           <PagosSelector filas={pagos} onChange={setPagos} total={totalMovimiento} />
         )}
@@ -505,9 +524,11 @@ export default function MovimientosClient({ rol }: { rol: string }) {
                       ? `Elegí un precio para la ${tipo}.`
                       : tipo === "venta" && !cliente
                         ? "Elegí un cliente para la venta."
-                        : pagosObligatorios && !pagosOk
-                          ? "Completá los pagos hasta que sumen el total del movimiento."
-                          : "Completá los campos obligatorios para confirmar."}
+                        : tipo === "compra" && !proveedorId
+                          ? "Elegí (o vinculá) un proveedor para la compra."
+                          : pagosObligatorios && !pagosOk
+                            ? "Completá los pagos hasta que sumen el total del movimiento."
+                            : "Completá los campos obligatorios para confirmar."}
             </p>
           )}
         </div>

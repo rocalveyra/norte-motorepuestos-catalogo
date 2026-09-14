@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export interface PagoRow {
@@ -49,6 +49,7 @@ export default function PagosSelector({
 }) {
   const [formasPago, setFormasPago] = useState<Opcion[]>([]);
   const [cuentas, setCuentas] = useState<Opcion[]>([]);
+  const ultimoAutoRef = useRef<string>("");
 
   useEffect(() => {
     const supabase = createClient();
@@ -62,12 +63,32 @@ export default function PagosSelector({
     })();
   }, []);
 
+  // Precarga la primera fila con el total del movimiento mientras el
+  // usuario no la haya editado a mano (una sola fila = todavía sin dividir).
+  useEffect(() => {
+    if (filas.length !== 1 || total <= 0) return;
+    const actual = filas[0].monto;
+    if (actual !== "" && actual !== ultimoAutoRef.current) return;
+    const nuevo = String(Math.round(total * 100) / 100);
+    if (nuevo === actual) return;
+    ultimoAutoRef.current = nuevo;
+    onChange([{ ...filas[0], monto: nuevo }]);
+  }, [total, filas, onChange]);
+
   function actualizarFila(key: string, cambios: Partial<PagoRow>) {
     onChange(filas.map((f) => (f.key === key ? { ...f, ...cambios } : f)));
   }
 
   function quitarFila(key: string) {
     onChange(filas.filter((f) => f.key !== key));
+  }
+
+  function saldoRestante(key: string): number {
+    const sumaOtras = filas.reduce(
+      (acc, f) => (f.key === key ? acc : acc + (parseMonto(f.monto) ?? 0)),
+      0
+    );
+    return Math.round((total - sumaOtras) * 100) / 100;
   }
 
   const suma = sumaPagos(filas);
@@ -78,7 +99,7 @@ export default function PagosSelector({
       <label className="text-xs font-semibold uppercase tracking-wide text-[#a89a89]">
         Forma de pago y cuenta
       </label>
-      {filas.map((fila) => (
+      {filas.map((fila, indice) => (
         <div key={fila.key} className="flex flex-wrap items-center gap-2">
           <select
             value={fila.formaPagoId}
@@ -112,6 +133,15 @@ export default function PagosSelector({
             placeholder="Monto"
             className="w-28 rounded-lg border border-[#2a2216] bg-[#151109] px-3 py-2 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
           />
+          {indice > 0 && (
+            <button
+              type="button"
+              onClick={() => actualizarFila(fila.key, { monto: String(saldoRestante(fila.key)) })}
+              className="text-xs font-semibold text-[#f7c948] hover:underline"
+            >
+              Usar saldo restante (${saldoRestante(fila.key).toLocaleString("es-AR")})
+            </button>
+          )}
           {filas.length > 1 && (
             <button
               type="button"
