@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import DashboardClient from "@/components/gestion/inicio/DashboardClient";
 
 export default async function InicioPage() {
   const supabase = await createClient();
@@ -15,6 +16,10 @@ export default async function InicioPage() {
     .single();
 
   if (!perfil) redirect("/gestion/login");
+
+  if (perfil.rol === "admin") {
+    return <DashboardClient nombre={perfil.nombre} />;
+  }
 
   return (
     <div className="flex flex-col gap-2">
