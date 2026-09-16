@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Producto } from "@/types";
 
@@ -15,8 +16,20 @@ export default function ProductCard({ producto }: { producto: Producto }) {
         </span>
       )}
       <div className="relative flex aspect-square items-center justify-center bg-black/40 text-4xl">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(246,185,59,0.16),transparent_65%)]" />
-        <span className="relative">🔧</span>
+        {producto.foto_url ? (
+          <Image
+            src={producto.foto_url}
+            alt={producto.detalle}
+            fill
+            sizes="(min-width: 1024px) 200px, (min-width: 640px) 33vw, 50vw"
+            className="object-cover"
+          />
+        ) : (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(246,185,59,0.16),transparent_65%)]" />
+            <span className="relative">🔧</span>
+          </>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <span className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-muted">

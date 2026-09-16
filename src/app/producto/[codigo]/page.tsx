@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -36,14 +37,26 @@ export default async function ProductoPage({
       </Link>
 
       <div className="flex flex-col gap-6 sm:flex-row">
-        <div className="relative flex aspect-square w-full items-center justify-center rounded-xl border border-edge bg-black/40 text-6xl sm:w-64 sm:shrink-0">
+        <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl border border-edge bg-black/40 text-6xl sm:w-64 sm:shrink-0">
           {p.en_promocion && (
-            <span className="absolute left-3 top-3 rounded-md bg-red px-2 py-0.5 font-condensed text-xs font-bold tracking-wide text-cream shadow">
+            <span className="absolute left-3 top-3 z-10 rounded-md bg-red px-2 py-0.5 font-condensed text-xs font-bold tracking-wide text-cream shadow">
               OFERTA
             </span>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(246,185,59,0.16),transparent_65%)]" />
-          <span className="relative">🔧</span>
+          {p.foto_url ? (
+            <Image
+              src={p.foto_url}
+              alt={p.detalle}
+              fill
+              sizes="(min-width: 640px) 256px, 100vw"
+              className="object-cover"
+            />
+          ) : (
+            <>
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(246,185,59,0.16),transparent_65%)]" />
+              <span className="relative">🔧</span>
+            </>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col gap-3">
