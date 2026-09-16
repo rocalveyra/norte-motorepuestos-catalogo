@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { descargarCSV } from "@/lib/csv";
 import ProveedorFormModal, { type Proveedor } from "@/components/gestion/proveedores/ProveedorFormModal";
 import HistorialComprasProveedorModal from "@/components/gestion/proveedores/HistorialComprasProveedorModal";
 
@@ -84,6 +85,19 @@ export default function ProveedoresClient({ rol }: { rol: string }) {
     cargar();
   }
 
+  function exportarCSV() {
+    const encabezado = ["Nombre", "Contacto", "Email", "Dirección", "Notas", "Productos abastecidos"];
+    const filas = proveedores.map((p) => [
+      p.nombre,
+      p.contacto ?? "",
+      p.email,
+      p.direccion,
+      p.notas ?? "",
+      String(productosPorProveedor[p.id] ?? 0),
+    ]);
+    descargarCSV(`proveedores_${new Date().toISOString().slice(0, 10)}.csv`, encabezado, filas);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -102,13 +116,23 @@ export default function ProveedoresClient({ rol }: { rol: string }) {
         </button>
       </div>
 
-      <input
-        type="text"
-        value={termino}
-        onChange={(e) => setTermino(e.target.value)}
-        placeholder="Buscar por nombre..."
-        className="max-w-sm rounded-lg border border-[#2a2216] bg-[#151109] px-4 py-2 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={termino}
+          onChange={(e) => setTermino(e.target.value)}
+          placeholder="Buscar por nombre..."
+          className="max-w-sm flex-1 rounded-lg border border-[#2a2216] bg-[#151109] px-4 py-2 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
+        />
+        <button
+          type="button"
+          onClick={exportarCSV}
+          disabled={proveedores.length === 0}
+          className="rounded-lg border border-[#f7c948] px-4 py-2 text-xs font-bold text-[#f7c948] transition hover:bg-[#f7c948]/10 disabled:opacity-40"
+        >
+          Exportar CSV
+        </button>
+      </div>
 
       {error && (
         <p className="rounded-lg border border-[#d62828] bg-[#d62828]/10 px-4 py-2 text-sm text-[#d62828]">

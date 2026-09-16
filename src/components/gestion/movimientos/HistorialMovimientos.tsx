@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { descargarCSV } from "@/lib/csv";
 
 export interface MovimientoHistorial {
   id: string;
@@ -171,6 +172,7 @@ export default function HistorialMovimientos({
       "Unidad",
       "Precio",
       "Cliente",
+      "Proveedor",
       "Forma(s) de pago / cuenta",
       "Usuario",
     ];
@@ -182,19 +184,11 @@ export default function HistorialMovimientos({
       r.unidad_medida,
       r.precio_unitario ? `$${r.precio_unitario.toLocaleString("es-AR")}` : "",
       r.clientes?.nombre ?? "",
+      r.proveedores?.nombre ?? "",
       pagosATexto(pagosPorMovimiento[r.id]),
       r.perfiles?.nombre ?? "",
     ]);
-    const csv = [encabezado, ...filas]
-      .map((fila) => fila.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `movimientos_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    descargarCSV(`movimientos_${new Date().toISOString().slice(0, 10)}.csv`, encabezado, filas);
   }
 
   return (

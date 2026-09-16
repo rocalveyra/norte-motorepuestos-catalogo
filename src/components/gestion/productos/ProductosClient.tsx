@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { descargarCSV } from "@/lib/csv";
 import ProductoEditModal, { type ProductoFila } from "@/components/gestion/productos/ProductoEditModal";
 
 const POR_PAGINA = 50;
@@ -28,6 +29,7 @@ export default function ProductosClient({ rol }: { rol: string }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState<ProductoFila | null>(null);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -38,21 +40,24 @@ export default function ProductosClient({ rol }: { rol: string }) {
       .then(({ data }) => setCategorias((data as Categoria[]) ?? []));
   }, []);
 
-  async function cargar() {
-    const supabase = createClient();
-    let query = supabase
-      .from("productos")
-      .select(SELECT, { count: "exact" })
-      .order("detalle");
-
+  function aplicarFiltros<T>(query: T): T {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = query;
     if (termino.trim().length >= 2) {
-      query = query.or(
+      q = q.or(
         `codigo.ilike.%${termino}%,detalle.ilike.%${termino}%,familia.ilike.%${termino}%,marca.ilike.%${termino}%`
       );
     }
     if (categoriaId) {
-      query = query.eq("categoria_id", categoriaId);
+      q = q.eq("categoria_id", categoriaId);
     }
+    return q;
+  }
+
+  async function cargar() {
+    const supabase = createClient();
+    let query = supabase.from("productos").select(SELECT, { count: "exact" }).order("detalle");
+    query = aplicarFiltros(query);
 
     const desde = pagina * POR_PAGINA;
     query = query.range(desde, desde + POR_PAGINA - 1);
@@ -66,6 +71,36 @@ export default function ProductosClient({ rol }: { rol: string }) {
     setProductos((data as unknown as ProductoFila[]) ?? []);
     setTotal(count ?? 0);
     setCargando(false);
+  }
+
+  async function exportarCSV() {
+    setExportando(true);
+    const supabase = createClient();
+    let query = supabase.from("productos").select(SELECT).order("detalle").range(0, 4999);
+    query = aplicarFiltros(query);
+    const { data, error: err } = await query;
+    setExportando(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    const filas = ((data as unknown as ProductoFila[]) ?? []).map((p) => [
+      p.codigo,
+      p.detalle,
+      p.categorias?.nombre ?? "",
+      p.unidad_medida,
+      String(p.stock),
+      p.precio_costo !== null ? String(p.precio_costo) : "",
+      p.precio_venta !== null ? String(p.precio_venta) : "",
+      p.lista2 !== null ? String(p.lista2) : "",
+      p.lista3 !== null ? String(p.lista3) : "",
+      p.en_promocion ? (p.precio_promocion !== null ? String(p.precio_promocion) : "Sí") : "",
+    ]);
+    descargarCSV(
+      `productos_${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Código", "Detalle", "Categoría", "Unidad", "Stock", "Costo", "Venta", "Lista 2", "Lista 3", "Promoción"],
+      filas
+    );
   }
 
   useEffect(() => {
@@ -113,6 +148,14 @@ export default function ProductosClient({ rol }: { rol: string }) {
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={exportarCSV}
+          disabled={exportando || total === 0}
+          className="rounded-lg border border-[#f7c948] px-4 py-2 text-xs font-bold text-[#f7c948] transition hover:bg-[#f7c948]/10 disabled:opacity-40"
+        >
+          {exportando ? "Exportando..." : "Exportar CSV"}
+        </button>
       </div>
 
       {error && (

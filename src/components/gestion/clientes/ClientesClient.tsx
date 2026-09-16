@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { descargarCSV } from "@/lib/csv";
 import ClienteFormModal, { type Cliente } from "@/components/gestion/clientes/ClienteFormModal";
 import HistorialComprasModal from "@/components/gestion/clientes/HistorialComprasModal";
 
@@ -92,6 +93,18 @@ export default function ClientesClient({ rol }: { rol: string }) {
     cargar();
   }
 
+  function exportarCSV() {
+    const encabezado = ["Nombre", "Teléfono", "DNI", "Dirección", "Compras"];
+    const filas = clientes.map((c) => [
+      c.nombre,
+      c.telefono ?? "",
+      c.dni ?? "",
+      c.direccion ?? "",
+      String(compras[c.id] ?? 0),
+    ]);
+    descargarCSV(`clientes_${new Date().toISOString().slice(0, 10)}.csv`, encabezado, filas);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -110,13 +123,23 @@ export default function ClientesClient({ rol }: { rol: string }) {
         </button>
       </div>
 
-      <input
-        type="text"
-        value={termino}
-        onChange={(e) => setTermino(e.target.value)}
-        placeholder="Buscar por nombre, teléfono o DNI..."
-        className="max-w-sm rounded-lg border border-[#2a2216] bg-[#151109] px-4 py-2 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={termino}
+          onChange={(e) => setTermino(e.target.value)}
+          placeholder="Buscar por nombre, teléfono o DNI..."
+          className="max-w-sm flex-1 rounded-lg border border-[#2a2216] bg-[#151109] px-4 py-2 text-sm text-[#efe9df] outline-none focus:border-[#f2891f]"
+        />
+        <button
+          type="button"
+          onClick={exportarCSV}
+          disabled={clientes.length === 0}
+          className="rounded-lg border border-[#f7c948] px-4 py-2 text-xs font-bold text-[#f7c948] transition hover:bg-[#f7c948]/10 disabled:opacity-40"
+        >
+          Exportar CSV
+        </button>
+      </div>
 
       {error && (
         <p className="rounded-lg border border-[#d62828] bg-[#d62828]/10 px-4 py-2 text-sm text-[#d62828]">
