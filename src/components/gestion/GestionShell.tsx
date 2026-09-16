@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { NAV_ITEMS } from "./nav";
+import CambiarPasswordModal from "@/components/gestion/CambiarPasswordModal";
 
 function isActive(pathname: string, href: string) {
   if (href === "/gestion") return pathname === "/gestion";
@@ -51,6 +52,8 @@ export default function GestionShell({
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cuentaMenuOpen, setCuentaMenuOpen] = useState(false);
+  const [cambiarPasswordAbierto, setCambiarPasswordAbierto] = useState(false);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -108,20 +111,44 @@ export default function GestionShell({
 
           <div className="hidden md:block" />
 
-          <div className="flex items-center gap-3">
-            <div className="text-right text-sm">
-              <p className="font-semibold">{nombre}</p>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#f7c948]">
-                {rol}
-              </p>
-            </div>
+          <div className="relative">
             <button
               type="button"
-              onClick={handleLogout}
-              className="rounded-lg border border-[#2a2216] px-3 py-1.5 text-xs font-semibold text-[#efe9df] transition hover:border-[#d62828] hover:text-[#d62828]"
+              onClick={() => setCuentaMenuOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-right text-sm transition hover:bg-[#1c1712]"
             >
-              Cerrar sesión
+              <div>
+                <p className="font-semibold">{nombre}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#f7c948]">
+                  {rol}
+                </p>
+              </div>
+              <span className="text-xs text-[#a89a89]">▾</span>
             </button>
+            {cuentaMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setCuentaMenuOpen(false)} />
+                <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-lg border border-[#2a2216] bg-[#151109] shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCuentaMenuOpen(false);
+                      setCambiarPasswordAbierto(true);
+                    }}
+                    className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-[#efe9df] hover:bg-[#1c1712]"
+                  >
+                    Cambiar contraseña
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-[#d62828] hover:bg-[#1c1712]"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </header>
 
@@ -174,6 +201,10 @@ export default function GestionShell({
 
         <main className="flex-1 p-4 md:p-8">{children}</main>
       </div>
+
+      {cambiarPasswordAbierto && (
+        <CambiarPasswordModal onClose={() => setCambiarPasswordAbierto(false)} />
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ export const NAV_ITEMS = [
   { href: "/gestion/movimientos", label: "Movimientos", adminOnly: false },
   { href: "/gestion/caja", label: "Caja", adminOnly: false },
   { href: "/gestion/cuentas", label: "Cuentas", adminOnly: true },
+  { href: "/gestion/usuarios", label: "Usuarios", adminOnly: true },
   { href: "/gestion/proveedores", label: "Proveedores", adminOnly: false },
   { href: "/gestion/clientes", label: "Clientes", adminOnly: false },
 ] as const;
