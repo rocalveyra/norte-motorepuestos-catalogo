@@ -8,7 +8,7 @@ import BusinessInfo from "@/components/BusinessInfo";
 export const revalidate = 0;
 
 const PRODUCTO_SELECT =
-  "id, codigo, detalle, descripcion, familia, categoria_id, marca, precio_venta, stock, foto_url, activo, en_promocion, categorias(nombre)";
+  "id, codigo, detalle, descripcion, familia, categoria_id, marca, precio_venta, precio_promocion, stock, foto_url, activo, en_promocion, categorias(nombre)";
 
 export default async function Home({
   searchParams,

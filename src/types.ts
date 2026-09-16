@@ -14,6 +14,7 @@ export interface Producto {
   categoria_id: string | null;
   marca: string | null;
   precio_venta: number;
+  precio_promocion: number | null;
   stock: number;
   foto_url: string | null;
   activo: boolean;

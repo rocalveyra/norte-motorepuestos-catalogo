@@ -17,7 +17,7 @@ export default async function ProductoPage({
   const { data: producto } = await supabase
     .from("productos")
     .select(
-      "id, codigo, detalle, descripcion, familia, categoria_id, marca, precio_venta, stock, foto_url, activo, en_promocion, categorias(nombre)"
+      "id, codigo, detalle, descripcion, familia, categoria_id, marca, precio_venta, precio_promocion, stock, foto_url, activo, en_promocion, categorias(nombre)"
     )
     .eq("codigo", codigo)
     .eq("activo", true)
@@ -67,9 +67,20 @@ export default async function ProductoPage({
           {p.marca && <p className="text-sm text-muted">Marca: {p.marca}</p>}
           {p.descripcion && <p className="text-sm text-cream/90">{p.descripcion}</p>}
 
-          <p className="text-2xl font-extrabold tabular-nums text-gold">
-            ${p.precio_venta.toLocaleString("es-AR")}
-          </p>
+          {p.en_promocion && p.precio_promocion ? (
+            <div className="flex flex-wrap items-baseline gap-3">
+              <p className="text-2xl font-extrabold tabular-nums text-gold">
+                ${p.precio_promocion.toLocaleString("es-AR")}
+              </p>
+              <p className="text-base text-muted line-through">
+                ${p.precio_venta.toLocaleString("es-AR")}
+              </p>
+            </div>
+          ) : (
+            <p className="text-2xl font-extrabold tabular-nums text-gold">
+              ${p.precio_venta.toLocaleString("es-AR")}
+            </p>
+          )}
           <p className={`text-sm font-semibold ${sinStock ? "text-red" : "text-green"}`}>
             {sinStock ? "Sin stock" : `Stock disponible: ${p.stock}`}
           </p>

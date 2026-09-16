@@ -4,6 +4,7 @@ import type { Producto } from "@/types";
 
 export default function ProductCard({ producto }: { producto: Producto }) {
   const sinStock = producto.stock <= 0;
+  const tienePromo = producto.en_promocion && !!producto.precio_promocion;
 
   return (
     <Link
@@ -38,9 +39,20 @@ export default function ProductCard({ producto }: { producto: Producto }) {
         <h3 className="line-clamp-2 min-h-[2.4em] text-sm text-cream">
           {producto.detalle}
         </h3>
-        <p className="mt-auto text-lg font-extrabold tabular-nums text-gold">
-          ${producto.precio_venta.toLocaleString("es-AR")}
-        </p>
+        {tienePromo ? (
+          <div className="mt-auto flex flex-wrap items-baseline gap-2">
+            <p className="text-lg font-extrabold tabular-nums text-gold">
+              ${producto.precio_promocion!.toLocaleString("es-AR")}
+            </p>
+            <p className="text-xs text-muted line-through">
+              ${producto.precio_venta.toLocaleString("es-AR")}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-auto text-lg font-extrabold tabular-nums text-gold">
+            ${producto.precio_venta.toLocaleString("es-AR")}
+          </p>
+        )}
         <p
           className={`text-xs font-semibold ${sinStock ? "text-red" : "text-green"}`}
         >
